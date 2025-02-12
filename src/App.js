@@ -3,6 +3,7 @@ import Board from './components/Board';
 import Keyboard from './components/Keyboard';
 import { createContext, useEffect, useState } from 'react'; 
 import { boardDefault, generateWordSet } from './Words'
+import GameOver from './components/GameOver';
 
 export const AppContext = createContext();
 
@@ -10,12 +11,17 @@ function App() {
   const [board, setBoard] = useState(boardDefault);
   const [currAttempt, setCurrAttempt] = useState({attempt: 0, letterPos: 0})
   const [wordSet, setWordSet] = useState(new Set())
-
-  const correctWord = "RIGHT";
+  const [disabledLetters, setDisabledLetters] = useState([])
+  const [correctWord, setCorrectWord] = useState("")
+  const [gameOver, setGameOver] = useState({
+    gameOver: false,
+    guessedWord: false
+  })
 
   useEffect(() => {
     generateWordSet().then((words) => {
       setWordSet(words.wordSet)
+      setCorrectWord(words.todaysWord)
       console.log(words)
     })
   }, [])
@@ -45,12 +51,20 @@ function App() {
     }
 
     console.log((currWord.toLowerCase() + " "))
-    console.log(wordSet.has(currWord.toLowerCase() + " "))
+    console.log(wordSet.has(currWord.toLowerCase()))
 
     if (wordSet.has(currWord.toLowerCase() + " ")) {
       setCurrAttempt({ attempt: currAttempt.attempt + 1, letterPos: 0 })
     } else {
       alert("Word Not Found")
+    }
+
+    if (currWord === correctWord) {
+      setGameOver({gameOver: true, guessedWord: true})
+    }
+
+    if (currAttempt.attempt === 7){
+      setGameOver({gameOver: true, guessedWord: false})
     }
 
     setCurrAttempt({attempt: currAttempt.attempt + 1, letterPos: 0})
@@ -69,11 +83,15 @@ function App() {
         onDelete, 
         onEnter, 
         onSelectLetter,
-        correctWord
+        correctWord,
+        disabledLetters,
+        setDisabledLetters,
+        setGameOver,
+        gameOver
       }}>
       <div className='game'>
         <Board />
-        <Keyboard />
+        {gameOver.gameOver ? <GameOver/> : <Keyboard />}
       </div>
      </AppContext.Provider>
     </div>
